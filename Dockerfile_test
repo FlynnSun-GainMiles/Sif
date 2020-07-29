@@ -1,0 +1,31 @@
+# Pull base image.
+FROM ghjjhg567/sif:latest
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TERM linux
+
+# For log message in container
+ENV PYTHONUNBUFFERED 1
+
+
+WORKDIR /usr/src/app
+
+COPY [".", "."]
+
+# supervisor 3.2 or above is required to pass environment variables
+RUN \
+  pip install --upgrade setuptools ; \
+  pip3 install --upgrade setuptools ; \
+  pip install supervisor==3.2 && \
+  pip3 install uwsgi && \
+  pip3 install -r /usr/src/app/requirements.txt && \
+  mkdir -p /etc/supervisor/conf.d /var/log/sif && \
+  echo Done
+
+COPY ["./supervisord/supervisord.conf", "/etc/"]
+COPY ["./supervisord/supervisord-uwsgi.conf", "/etc/supervisor/conf.d/"]
+
+ENTRYPOINT ["/usr/src/app/docker-entrypoint.sh"]
+
+EXPOSE 8700
+CMD ["supervisord", "-n"]
